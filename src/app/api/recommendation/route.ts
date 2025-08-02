@@ -22,6 +22,17 @@ interface RecommendationResponse {
     azimuth: number;
     altitude: number;
   };
+  flightDuration: number; // in minutes
+  departureTime: string;
+  arrivalTime: string;
+  departureAirport: {
+    iata: string;
+    city: string;
+  };
+  arrivalAirport: {
+    iata: string;
+    city: string;
+  };
 }
 
 // Calculate great circle distance between two points
@@ -151,11 +162,18 @@ export async function POST(request: NextRequest) {
       } else {
         reason = `You will have a great view of the sun.`;
       }
-    } else if (sunAltitude < 0) {
+    } 
+    else if (sunAltitude < 0) {
       reason = `You will have a great view of the night sky.`;
-    } else {
+    } 
+    else {
       reason = `You will have a good view of the landscape below.`;
     }
+
+    // Calculate flight duration and times
+    const departureTime = new Date(departureTimestamp);
+    const arrivalTime = new Date(departureTimestamp + 8 * 60 * 60 * 1000); // 8 hour estimate
+    const flightDuration = 8 * 60; // 8 hours in minutes
 
     const response: RecommendationResponse = {
       recommendation,
@@ -164,6 +182,25 @@ export async function POST(request: NextRequest) {
       sunPosition: {
         azimuth: sunAzimuth,
         altitude: sunAltitude
+      },
+      flightDuration,
+      departureTime: departureTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      }),
+      arrivalTime: arrivalTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      }),
+      departureAirport: {
+        iata: departureAirport.iata,
+        city: departureAirport.city
+      },
+      arrivalAirport: {
+        iata: arrivalAirport.iata,
+        city: arrivalAirport.city
       }
     };
 

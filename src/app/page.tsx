@@ -18,6 +18,17 @@ interface RecommendationData {
     azimuth: number;
     altitude: number;
   };
+  flightDuration?: number;
+  departureTime?: string;
+  arrivalTime?: string;
+  departureAirport?: {
+    iata: string;
+    city: string;
+  };
+  arrivalAirport?: {
+    iata: string;
+    city: string;
+  };
 }
 
 export default function Home() {
@@ -103,6 +114,11 @@ export default function Home() {
                       recommendation={recommendation.recommendation}
                       reason={recommendation.reason}
                       sunPosition={recommendation.sunPosition}
+                      flightDuration={recommendation.flightDuration}
+                      departureTime={recommendation.departureTime}
+                      arrivalTime={recommendation.arrivalTime}
+                      departureAirport={recommendation.departureAirport}
+                      arrivalAirport={recommendation.arrivalAirport}
                     />
                   ) : (
                     <div className="h-full flex items-center justify-center">

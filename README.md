@@ -1,7 +1,7 @@
 # Airplane Scenic View Finder
 
 A Next.js web application that helps air travelers find the best seat for scenic views during their flight. The app analyzes flight paths, sun positions, and timing to recommend whether to sit on the left or right side of the plane for optimal views.
-
+  
 ## Features
 
 - **Flight Path Analysis**: Calculates great-circle flight paths between airports
@@ -54,7 +54,7 @@ npm run dev
 ### Core Algorithm
 
 1. **Flight Path Calculation**: The app generates intermediate points along the great-circle path between departure and arrival airports
-2. **Sun Position Analysis**: For the midpoint of the journey, it calculates the sun's azimuth and altitude
+2. **Sun Position Analysis**: For the midpoint of the journey, it calculates the sun's azimuth (the angle between North, measured clockwise around the observer's horizon, and a celestial body (sun, moon)) and altitude
 3. **Recommendation Logic**: 
    - Compares the sun's azimuth to the flight's bearing
    - If the sun is to the right of the flight path, recommends "Right Side"
@@ -64,7 +64,7 @@ npm run dev
 ### Data Structure
 
 The app includes a curated list of major world airports with:
-- Airport name and IATA code
+- Airport name and IATA code (unique 3 letter airport code)
 - City location
 - Latitude and longitude coordinates
 

@@ -30,7 +30,23 @@ export function MapView({ flightPath }: MapViewProps) {
 
   return (
     <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">Flight Path</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Flight Path</h3>
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>Departure</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>Arrival</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <img src="/sun.svg" alt="Sun" className="w-4 h-4" />
+            <span>Sun Positions</span>
+          </div>
+        </div>
+      </div>
       <div className="w-full h-96 rounded-lg overflow-hidden border">
         <MapComponent flightPath={flightPath} />
       </div>
