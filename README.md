@@ -1,36 +1,151 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Airplane Scenic View Finder
+
+A Next.js web application that helps air travelers find the best seat for scenic views during their flight. The app analyzes flight paths, sun positions, and timing to recommend whether to sit on the left or right side of the plane for optimal views.
+
+## Features
+
+- **Flight Path Analysis**: Calculates great-circle flight paths between airports
+- **Sun Position Calculation**: Uses the `suncalc` library to determine sun position during flight
+- **Smart Recommendations**: Recommends left or right side seating based on sun position and flight direction
+- **Interactive Map**: Visualizes flight paths using react-leaflet
+- **Modern UI**: Built with Tailwind CSS and shadcn/ui components
+- **TypeScript**: Fully typed for better development experience
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Maps**: react-leaflet with Leaflet
+- **Sun Calculations**: suncalc
+- **Date Handling**: date-fns
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18.16.1 or higher
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd best-seat
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## How It Works
 
-To learn more about Next.js, take a look at the following resources:
+### Core Algorithm
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Flight Path Calculation**: The app generates intermediate points along the great-circle path between departure and arrival airports
+2. **Sun Position Analysis**: For the midpoint of the journey, it calculates the sun's azimuth and altitude
+3. **Recommendation Logic**: 
+   - Compares the sun's azimuth to the flight's bearing
+   - If the sun is to the right of the flight path, recommends "Right Side"
+   - If the sun is to the left, recommends "Left Side"
+   - Determines if it's sunrise, sunset, or daytime based on sun altitude
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Data Structure
 
-## Deploy on Vercel
+The app includes a curated list of major world airports with:
+- Airport name and IATA code
+- City location
+- Latitude and longitude coordinates
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/
+│   ├── api/
+│   │   └── recommendation/
+│   │       └── route.ts          # API endpoint for seat recommendations
+│   ├── globals.css               # Global styles
+│   ├── layout.tsx                # Root layout
+│   └── page.tsx                  # Main page component
+├── components/
+│   ├── ui/                       # shadcn/ui components
+│   ├── FlightForm.tsx            # Flight input form
+│   ├── MapView.tsx               # Map wrapper component
+│   ├── MapComponent.tsx          # Leaflet map implementation
+│   └── RecommendationResult.tsx  # Results display component
+├── lib/
+│   ├── airports.ts               # Airport data and utilities
+│   └── utils.ts                  # Utility functions
+└── types/
+    └── suncalc.d.ts              # TypeScript declarations for suncalc
+```
+
+## API Endpoints
+
+### POST /api/recommendation
+
+**Request Body:**
+```json
+{
+  "departureIata": "JFK",
+  "arrivalIata": "LAX", 
+  "departureTimestamp": 1704067200000
+}
+```
+
+**Response:**
+```json
+{
+  "recommendation": "Left Side",
+  "reason": "You will have a beautiful view of the sunset.",
+  "flightPath": [
+    {
+      "lat": 40.6413,
+      "lon": -73.7781,
+      "time": 1704067200000
+    }
+  ],
+  "sunPosition": {
+    "azimuth": 245.6,
+    "altitude": 12.3
+  }
+}
+```
+
+## Usage
+
+1. **Select Airports**: Choose departure and arrival airports from the dropdown
+2. **Set Date & Time**: Pick your departure date and time
+3. **Get Recommendation**: Click "Find Best Seat" to get your recommendation
+4. **View Results**: See the recommended side, reason, and interactive flight path map
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- [suncalc](https://github.com/mourner/suncalc) for sun position calculations
+- [react-leaflet](https://react-leaflet.js.org/) for map integration
+- [shadcn/ui](https://ui.shadcn.com/) for UI components
+- [Tailwind CSS](https://tailwindcss.com/) for styling
