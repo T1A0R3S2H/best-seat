@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Sun, Moon } from 'lucide-react';
 
 interface RecommendationResultProps {
-  recommendation: 'Left Side' | 'Right Side';
+  recommendation: 'Left Side' | 'Right Side' | 'Either Side';
   reason: string;
   sunPosition: {
     azimuth: number;
@@ -38,6 +38,7 @@ export function RecommendationResult({
   arrivalAirport
 }: RecommendationResultProps) {
   const isLeftSide = recommendation === 'Left Side';
+  const isEitherSide = recommendation === 'Either Side';
   const isNight = sunPosition.altitude < 0;
 
   return (
@@ -107,7 +108,16 @@ export function RecommendationResult({
           
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="text-3xl font-bold text-blue-600">
-              {isLeftSide ? <ArrowLeft className="h-10 w-10" /> : <ArrowRight className="h-10 w-10" />}
+              {isEitherSide ? (
+                <div className="flex space-x-2">
+                  <ArrowLeft className="h-8 w-8" />
+                  <ArrowRight className="h-8 w-8" />
+                </div>
+              ) : isLeftSide ? (
+                <ArrowLeft className="h-10 w-10" />
+              ) : (
+                <ArrowRight className="h-10 w-10" />
+              )}
             </div>
             <div className="text-xl font-bold text-gray-900">
               {recommendation}

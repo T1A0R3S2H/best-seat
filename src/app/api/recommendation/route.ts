@@ -17,7 +17,7 @@ interface FlightPathPoint {
 }
 
 interface RecommendationResponse {
-  recommendation: 'Left Side' | 'Right Side';
+  recommendation: 'Left Side' | 'Right Side' | 'Either Side';
   reason: string;
   flightPath: FlightPathPoint[];
   sunPosition: {
@@ -68,10 +68,90 @@ function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number
   return (bearing + 360) % 360;
 }
 
+// Calculate perpendicular distance from a point to a line segment
+function calculatePerpendicularDistance(
+  pointLat: number, 
+  pointLon: number, 
+  lineStartLat: number, 
+  lineStartLon: number, 
+  lineEndLat: number, 
+  lineEndLon: number
+): number {
+  // Convert to radians
+  const lat1 = lineStartLat * Math.PI / 180;
+  const lon1 = lineStartLon * Math.PI / 180;
+  const lat2 = lineEndLat * Math.PI / 180;
+  const lon2 = lineEndLon * Math.PI / 180;
+  const latP = pointLat * Math.PI / 180;
+  const lonP = pointLon * Math.PI / 180;
+  
+  // Calculate the perpendicular distance using spherical geometry
+  const R = 6371; // Earth's radius in km
+  
+  // Calculate the great circle distance from point to line start
+  const d1 = Math.acos(
+    Math.sin(latP) * Math.sin(lat1) + 
+    Math.cos(latP) * Math.cos(lat1) * Math.cos(lonP - lon1)
+  ) * R;
+  
+  // Calculate the great circle distance from point to line end
+  const d2 = Math.acos(
+    Math.sin(latP) * Math.sin(lat2) + 
+    Math.cos(latP) * Math.cos(lat2) * Math.cos(lonP - lon2)
+  ) * R;
+  
+  // Calculate the great circle distance of the line segment
+  const lineLength = Math.acos(
+    Math.sin(lat1) * Math.sin(lat2) + 
+    Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)
+  ) * R;
+  
+  // Calculate the perpendicular distance using the formula:
+  // perpendicular distance = 2 * area / base
+  // where area = sqrt(s * (s - a) * (s - b) * (s - c))
+  // and s = (a + b + c) / 2
+  const s = (d1 + d2 + lineLength) / 2;
+  const area = Math.sqrt(s * (s - d1) * (s - d2) * (s - lineLength));
+  const perpendicularDistance = (2 * area) / lineLength;
+  
+  return perpendicularDistance;
+}
+
+// Determine if a landmark is visible based on time of day and landmark type
+function isLandmarkVisible(landmark: { type: string }, sunAltitude: number, timeOfDay: number): boolean {
+  const isNight = sunAltitude < 0;
+  const isDaytime = sunAltitude > 0;
+  const isSunset = timeOfDay >= 16 && timeOfDay <= 20;
+  const isSunrise = timeOfDay >= 6 && timeOfDay <= 10;
+  
+  // Landmark types that are visible at night (illuminated or naturally visible)
+  const nightVisibleTypes = ['City', 'Architecture', 'Monument'];
+  
+  if (isNight) {
+    // At night, only illuminated landmarks are visible
+    return nightVisibleTypes.includes(landmark.type);
+  } else if (isDaytime) {
+    // During daytime, all landmarks are visible
+    return true;
+  } else if (isSunrise || isSunset) {
+    // During sunrise/sunset, most landmarks are visible with good lighting
+    return true;
+  }
+  
+  return false;
+}
+
 // Generate intermediate points along the great circle path
-function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: number, departureTime: number): FlightPathPoint[] {
+function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: number, departureTime: number): { flightPath: FlightPathPoint[], duration: number } {
   const points: FlightPathPoint[] = [];
   const numPoints = 8;
+  
+  // Calculate actual flight duration based on distance
+  const totalDistance = calculateDistance(lat1, lon1, lat2, lon2);
+  const averageSpeed = 800; // km/h for commercial aircraft
+  const flightDurationHours = totalDistance / averageSpeed;
+  const flightDurationMs = flightDurationHours * 60 * 60 * 1000;
+  const flightDuration = Math.round(flightDurationHours * 60); // Convert to minutes
   
   for (let i = 0; i <= numPoints; i++) {
     const fraction = i / numPoints;
@@ -90,9 +170,8 @@ function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: numb
     const lon = Math.atan2(y, x) * 180 / Math.PI;
     
     // Estimate time at this point (assuming constant speed)
-    const totalDistance = calculateDistance(lat1, lon1, lat2, lon2);
     const distanceToPoint = calculateDistance(lat1, lon1, lat, lon);
-    const timeAtPoint = departureTime + (distanceToPoint / totalDistance) * 8 * 60 * 60 * 1000; // 8 hour flight estimate
+    const timeAtPoint = departureTime + (distanceToPoint / totalDistance) * flightDurationMs;
     
     points.push({
       lat,
@@ -101,7 +180,7 @@ function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: numb
     });
   }
   
-  return points;
+  return { flightPath: points, duration: flightDuration };
 }
 
 export async function POST(request: NextRequest) {
@@ -121,7 +200,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate flight path
-    const flightPath = generateFlightPath(
+    const { flightPath, duration: flightDuration } = generateFlightPath(
       departureAirport.coordinates.lat,
       departureAirport.coordinates.lon,
       arrivalAirport.coordinates.lat,
@@ -148,58 +227,76 @@ export async function POST(request: NextRequest) {
     const sunAzimuth = (sunPosition.azimuth * 180 / Math.PI + 360) % 360;
     const relativeSunPosition = (sunAzimuth - flightBearing + 360) % 360;
     
-    let recommendation: 'Left Side' | 'Right Side';
+    let recommendation: 'Left Side' | 'Right Side' | 'Either Side';
     let reason: string;
     
-    if (relativeSunPosition > 180) {
-      recommendation = 'Left Side';
-    } else {
-      recommendation = 'Right Side';
-    }
-
     // Determine if it's sunrise or sunset
     const sunAltitude = sunPosition.altitude * 180 / Math.PI;
     const timeOfDay = midpointTime.getHours();
+    const isSunset = timeOfDay >= 16 && timeOfDay <= 20;
+    const isSunrise = timeOfDay >= 6 && timeOfDay <= 10;
+    const isDaytime = sunAltitude > 0;
     
-    if (sunAltitude > 0 && sunAltitude < 15) {
-      if (timeOfDay >= 6 && timeOfDay <= 10) {
-        reason = `You will have a beautiful view of the sunrise.`;
-      } else if (timeOfDay >= 16 && timeOfDay <= 20) {
-        reason = `You will have a beautiful view of the sunset.`;
+    // For sunset/sunrise viewing, we want to face the sun
+    // For daytime flights, we want to avoid direct sun glare
+    // For nighttime flights, we want to face away from the sun for better night sky viewing
+    if (isSunset || isSunrise) {
+      // For sunset/sunrise, recommend the side that faces the sun
+      if (relativeSunPosition > 180) {
+        recommendation = 'Left Side';
       } else {
-        reason = `You will have a great view of the sun.`;
+        recommendation = 'Right Side';
       }
-    } 
-    else if (sunAltitude < 0) {
-      reason = `You will have a great view of the night sky.`;
-    } 
-    else {
-      reason = `You will have a good view of the landscape below.`;
+      
+      if (isSunrise) {
+        reason = `You will have a beautiful view of the sunrise.`;
+      } else {
+        reason = `You will have a beautiful view of the sunset.`;
+      }
+    } else if (isDaytime) {
+      // For daytime flights, avoid direct sun glare by facing away from the sun
+      if (relativeSunPosition > 180) {
+        recommendation = 'Left Side';
+      } else {
+        recommendation = 'Right Side';
+      }
+      reason = `You will have a good view of the landscape below without direct sun glare.`;
+    } else {
+      // For nighttime flights, both sides offer similar views
+      recommendation = 'Either Side';
+      reason = `This is a night flight, so there won't be a sunrise or sunset. Both sides of the aircraft will offer a similar view of the night sky.`;
     }
 
     // Landmark Detection Logic
-    const VISIBILITY_RADIUS_KM = 300;
+    const VISIBILITY_RADIUS_KM = 50; // More realistic radius for landmark visibility
     
-    // Filter landmarks that are within visibility range of the flight path
+    // Filter landmarks that are within visibility range of the flight path AND visible at current time
     const nearbyLandmarks = landmarks.filter(landmark => {
-      // Calculate distance from landmark to flight path
-      let minDistance = Infinity;
+      // Calculate perpendicular distance from landmark to flight path
+      let minPerpendicularDistance = Infinity;
       
       for (let i = 0; i < flightPath.length - 1; i++) {
         const segmentStart = flightPath[i];
+        const segmentEnd = flightPath[i + 1];
         
-        // Calculate distance from landmark to this flight segment
-        const distance = calculateDistance(
+        // Calculate perpendicular distance from landmark to this flight segment
+        const perpendicularDistance = calculatePerpendicularDistance(
           landmark.coordinates.lat,
           landmark.coordinates.lon,
           segmentStart.lat,
-          segmentStart.lon
+          segmentStart.lon,
+          segmentEnd.lat,
+          segmentEnd.lon
         );
         
-        minDistance = Math.min(minDistance, distance);
+        minPerpendicularDistance = Math.min(minPerpendicularDistance, perpendicularDistance);
       }
       
-      return minDistance <= VISIBILITY_RADIUS_KM;
+      // Check if landmark is within visibility range AND visible at current time
+      const isWithinRange = minPerpendicularDistance <= VISIBILITY_RADIUS_KM;
+      const isVisibleAtTime = isLandmarkVisible(landmark, sunAltitude, timeOfDay);
+      
+      return isWithinRange && isVisibleAtTime;
     });
     
     // Determine which side of the plane each landmark is on
@@ -230,10 +327,10 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Calculate flight duration and times
+    // Calculate flight times
     const departureTime = new Date(departureTimestamp);
-    const arrivalTime = new Date(departureTimestamp + 8 * 60 * 60 * 1000); // 8 hour estimate
-    const flightDuration = 8 * 60; // 8 hours in minutes
+    const flightDurationMs = flightDuration * 60 * 1000; // Convert minutes to milliseconds
+    const arrivalTime = new Date(departureTimestamp + flightDurationMs);
 
     const response: RecommendationResponse = {
       recommendation,

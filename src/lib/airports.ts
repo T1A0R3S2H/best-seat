@@ -10,6 +10,36 @@ export interface Airport {
 
 export const airports: Airport[] = [
   {
+    name: "Indira Gandhi International Airport",
+    iata: "DEL",
+    city: "Delhi",
+    coordinates: { lat: 28.5562, lon: 77.1000 }
+  },
+  {
+    name: "Chhatrapati Shivaji Maharaj International Airport",
+    iata: "BOM",
+    city: "Mumbai",
+    coordinates: { lat: 19.0896, lon: 72.8656 }
+  },
+  {
+    name: "Kempegowda International Airport",
+    iata: "BLR",
+    city: "Bangalore",
+    coordinates: { lat: 13.1986, lon: 77.7066 }
+  },
+  {
+    name: "Chennai International Airport",
+    iata: "MAA",
+    city: "Chennai",
+    coordinates: { lat: 12.9941, lon: 80.1709 }
+  },
+  {
+    name: "Rajiv Gandhi International Airport",
+    iata: "HYD",
+    city: "Hyderabad",
+    coordinates: { lat: 17.2403, lon: 78.4294 }
+  },
+  {
     name: "John F. Kennedy International Airport",
     iata: "JFK",
     city: "New York",

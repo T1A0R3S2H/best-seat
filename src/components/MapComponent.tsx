@@ -165,7 +165,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
     });
 
     // Add sun markers for each position
-    sunPositions.forEach((sunPos, index) => {
+    sunPositions.forEach((sunPos) => {
       const sunMarker = L.marker([sunPos.lat, sunPos.lon], {
         icon: sunIcon,
         title: `Sun Position at ${sunPos.label}`

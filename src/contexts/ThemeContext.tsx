@@ -17,25 +17,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [isNight, setIsNight] = useState(false);
 
-  // Determine if it's night time (6 PM to 6 AM)
-  const checkNightTime = () => {
-    const hour = new Date().getHours();
-    const isNightTime = hour >= 18 || hour < 6;
-    setIsNight(isNightTime);
-    
-    // Auto-switch theme based on time
-    if (isNightTime && theme === 'light') {
-      setTheme('dark');
-    } else if (!isNightTime && theme === 'dark') {
-      setTheme('light');
-    }
-  };
-
   useEffect(() => {
+    // Determine if it's night time (6 PM to 6 AM)
+    const checkNightTime = () => {
+      const hour = new Date().getHours();
+      const isNightTime = hour >= 18 || hour < 6;
+      setIsNight(isNightTime);
+      
+      // Auto-switch theme based on time
+      if (isNightTime && theme === 'light') {
+        setTheme('dark');
+      } else if (!isNightTime && theme === 'dark') {
+        setTheme('light');
+      }
+    };
+
     checkNightTime();
     const interval = setInterval(checkNightTime, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [theme, checkNightTime]);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
