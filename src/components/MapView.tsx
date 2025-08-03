@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 interface FlightPathPoint {
   lat: number;
@@ -42,7 +42,7 @@ export function MapView({ flightPath }: MapViewProps) {
             <span>Arrival</span>
           </div>
           <div className="flex items-center space-x-1">
-            <img src="/sun.svg" alt="Sun" className="w-4 h-4" />
+            <Image src="/sun.svg" alt="Sun" width={16} height={16} />
             <span>Sun Positions</span>
           </div>
         </div>

@@ -35,7 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     checkNightTime();
     const interval = setInterval(checkNightTime, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [theme]);
+  }, [theme, checkNightTime]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');

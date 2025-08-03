@@ -35,8 +35,7 @@ export function RecommendationResult({
   departureTime, 
   arrivalTime, 
   departureAirport, 
-  arrivalAirport,
-  visibleLandmarks
+  arrivalAirport
 }: RecommendationResultProps) {
   const isLeftSide = recommendation === 'Left Side';
   const isNight = sunPosition.altitude < 0;
@@ -150,7 +149,7 @@ export function RecommendationResult({
 
           <div className="text-xs text-center text-gray-500">
             <p>
-              💡 Based on sun's position during your flight
+              💡 Based on sun&apos;s position during your flight
             </p>
           </div>
         </div>

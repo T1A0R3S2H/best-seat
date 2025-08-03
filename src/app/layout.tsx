@@ -2,15 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Add Raleway font
-const raleway = {
-  variable: "--font-raleway",
-  family: "Raleway",
-  style: "normal",
-  weight: "100 900",
-  display: "swap",
-};
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

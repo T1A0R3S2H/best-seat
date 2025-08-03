@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import SunCalc from 'suncalc';
 import { findAirportByIata } from '@/lib/airports';
-import { landmarks, type Landmark } from '@/lib/landmarks';
+import { landmarks } from '@/lib/landmarks';
 // import * as turf from '@turf/turf'; // Uncomment after installing @turf/turf
 
 interface RequestBody {
@@ -64,7 +64,7 @@ function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number
   const y = Math.sin(dLon) * Math.cos(lat2Rad);
   const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
   
-  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  const bearing = Math.atan2(y, x) * 180 / Math.PI;
   return (bearing + 360) % 360;
 }
 
@@ -187,7 +187,6 @@ export async function POST(request: NextRequest) {
       
       for (let i = 0; i < flightPath.length - 1; i++) {
         const segmentStart = flightPath[i];
-        const segmentEnd = flightPath[i + 1];
         
         // Calculate distance from landmark to this flight segment
         const distance = calculateDistance(

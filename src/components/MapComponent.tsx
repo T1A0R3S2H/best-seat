@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { getSubsolarPoint } from '@/lib/getSubsolarPoint';
 import { getFlightSunPositions } from '@/lib/flightSunPositions';
 
 interface FlightPathPoint {
@@ -78,7 +77,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
     if (flightPath.length > 1) {
       const pathCoordinates = flightPath.map(point => [point.lat, point.lon] as [number, number]);
       
-      const polyline = L.polyline(pathCoordinates, {
+      L.polyline(pathCoordinates, {
         color: '#3b82f6',
         weight: 3,
         opacity: 0.8
@@ -151,7 +150,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
 
     // Remove existing sun markers and labels
     map.eachLayer((layer) => {
-      if (layer instanceof L.Marker && (layer as any)._sunMarker) {
+      if (layer instanceof L.Marker && (layer as L.Marker & { _sunMarker?: boolean })._sunMarker) {
         map.removeLayer(layer);
       }
     });
@@ -186,7 +185,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
       `);
 
       // Mark this as a sun marker for easy removal
-      (sunMarker as any)._sunMarker = true;
+      (sunMarker as L.Marker & { _sunMarker?: boolean })._sunMarker = true;
 
       // Add text label below the sun marker
       const labelIcon = L.divIcon({
@@ -219,7 +218,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
       }).addTo(map);
 
       // Mark this as a sun label for easy removal
-      (labelMarker as any)._sunMarker = true;
+      (labelMarker as L.Marker & { _sunMarker?: boolean })._sunMarker = true;
     });
 
   }, [sunPositions]);
