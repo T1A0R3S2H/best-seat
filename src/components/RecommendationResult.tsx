@@ -20,6 +20,11 @@ interface RecommendationResultProps {
     iata: string;
     city: string;
   };
+  visibleLandmarks?: Array<{
+    name: string;
+    type: string;
+    side: 'Left' | 'Right';
+  }>;
 }
 
 export function RecommendationResult({ 
@@ -30,7 +35,8 @@ export function RecommendationResult({
   departureTime, 
   arrivalTime, 
   departureAirport, 
-  arrivalAirport 
+  arrivalAirport,
+  visibleLandmarks
 }: RecommendationResultProps) {
   const isLeftSide = recommendation === 'Left Side';
   const isNight = sunPosition.altitude < 0;
@@ -139,6 +145,8 @@ export function RecommendationResult({
               </div>
             </div>
           </div>
+
+          
 
           <div className="text-xs text-center text-gray-500">
             <p>

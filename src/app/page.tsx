@@ -29,6 +29,11 @@ interface RecommendationData {
     iata: string;
     city: string;
   };
+  visibleLandmarks?: Array<{
+    name: string;
+    type: string;
+    side: 'Left' | 'Right';
+  }>;
 }
 
 export default function Home() {
@@ -100,7 +105,7 @@ export default function Home() {
                   </p>
                 </div>
                 
-                <FlightForm onSubmit={handleSubmit} isLoading={isLoading} />
+                <FlightForm onSubmit={handleSubmit} isLoading={isLoading} visibleLandmarks={recommendation?.visibleLandmarks} />
               </div>
             </div>
 
@@ -119,6 +124,7 @@ export default function Home() {
                       arrivalTime={recommendation.arrivalTime}
                       departureAirport={recommendation.departureAirport}
                       arrivalAirport={recommendation.arrivalAirport}
+                      visibleLandmarks={recommendation.visibleLandmarks}
                     />
                   ) : (
                     <div className="h-full flex items-center justify-center">

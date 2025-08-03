@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import SunCalc from 'suncalc';
 import { findAirportByIata } from '@/lib/airports';
+import { landmarks, type Landmark } from '@/lib/landmarks';
+// import * as turf from '@turf/turf'; // Uncomment after installing @turf/turf
 
 interface RequestBody {
   departureIata: string;
@@ -33,6 +35,11 @@ interface RecommendationResponse {
     iata: string;
     city: string;
   };
+  visibleLandmarks: Array<{
+    name: string;
+    type: string;
+    side: 'Left' | 'Right';
+  }>;
 }
 
 // Calculate great circle distance between two points
@@ -170,6 +177,60 @@ export async function POST(request: NextRequest) {
       reason = `You will have a good view of the landscape below.`;
     }
 
+    // Landmark Detection Logic
+    const VISIBILITY_RADIUS_KM = 300;
+    
+    // Filter landmarks that are within visibility range of the flight path
+    const nearbyLandmarks = landmarks.filter(landmark => {
+      // Calculate distance from landmark to flight path
+      let minDistance = Infinity;
+      
+      for (let i = 0; i < flightPath.length - 1; i++) {
+        const segmentStart = flightPath[i];
+        const segmentEnd = flightPath[i + 1];
+        
+        // Calculate distance from landmark to this flight segment
+        const distance = calculateDistance(
+          landmark.coordinates.lat,
+          landmark.coordinates.lon,
+          segmentStart.lat,
+          segmentStart.lon
+        );
+        
+        minDistance = Math.min(minDistance, distance);
+      }
+      
+      return minDistance <= VISIBILITY_RADIUS_KM;
+    });
+    
+    // Determine which side of the plane each landmark is on
+    const visibleLandmarks = nearbyLandmarks.map(landmark => {
+      // Calculate bearing from flight midpoint to landmark
+      const landmarkBearing = calculateBearing(
+        midpoint.lat,
+        midpoint.lon,
+        landmark.coordinates.lat,
+        landmark.coordinates.lon
+      );
+      
+      // Calculate relative angle
+      const relativeAngle = (landmarkBearing - flightBearing + 360) % 360;
+      
+      // Determine side based on relative angle
+      let side: 'Left' | 'Right';
+      if (relativeAngle >= 1 && relativeAngle <= 179) {
+        side = 'Right';
+      } else {
+        side = 'Left';
+      }
+      
+      return {
+        name: landmark.name,
+        type: landmark.type,
+        side
+      };
+    });
+
     // Calculate flight duration and times
     const departureTime = new Date(departureTimestamp);
     const arrivalTime = new Date(departureTimestamp + 8 * 60 * 60 * 1000); // 8 hour estimate
@@ -201,7 +262,8 @@ export async function POST(request: NextRequest) {
       arrivalAirport: {
         iata: arrivalAirport.iata,
         city: arrivalAirport.city
-      }
+      },
+      visibleLandmarks
     };
 
     return NextResponse.json(response);

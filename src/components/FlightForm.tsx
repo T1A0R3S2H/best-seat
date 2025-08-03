@@ -10,6 +10,7 @@ import { CalendarIcon, Plane } from 'lucide-react';
 import { format } from 'date-fns';
 import { airports, Airport } from '@/lib/airports';
 import { cn } from '@/lib/utils';
+import { LandmarkImage } from './LandmarkImage';
 
 interface FlightFormProps {
   onSubmit: (data: {
@@ -18,9 +19,14 @@ interface FlightFormProps {
     departureTimestamp: number;
   }) => void;
   isLoading: boolean;
+  visibleLandmarks?: Array<{
+    name: string;
+    type: string;
+    side: 'Left' | 'Right';
+  }>;
 }
 
-export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
+export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightFormProps) {
   const [departureAirport, setDepartureAirport] = useState<Airport | null>(null);
   const [arrivalAirport, setArrivalAirport] = useState<Airport | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -194,6 +200,43 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
         <Plane className="mr-2 h-3 w-3" />
         {isLoading ? 'Finding...' : 'Find Best Seat'}
       </Button>
+
+             {/* Visible Landmarks Section */}
+       {visibleLandmarks && visibleLandmarks.length > 0 && (
+         <div className="mt-6 pt-4 border-t border-gray-200">
+           <div className="bg-blue-50 rounded-lg p-3">
+             <h4 className="text-xs font-medium mb-3 text-blue-700">
+               🏛️ Visible Landmarks
+             </h4>
+             <div className="grid grid-cols-1 gap-3">
+               {visibleLandmarks.map((landmark, index) => (
+                 <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                   <div className="flex items-center justify-between mb-2">
+                     <span className={`px-2 py-1 rounded text-xs font-medium ${
+                       landmark.side === 'Left' 
+                         ? 'bg-blue-100 text-blue-700' 
+                         : 'bg-green-100 text-green-700'
+                     }`}>
+                       {landmark.side} Side
+                     </span>
+                     <span className="text-gray-500 text-xs">{landmark.type}</span>
+                   </div>
+                   <div className="text-sm font-medium text-gray-900 mb-2">
+                     {landmark.name}
+                   </div>
+                   <div className="relative w-full h-24 rounded overflow-hidden">
+                     <LandmarkImage 
+                       landmarkName={landmark.name}
+                       landmarkType={landmark.type}
+                       className="w-full h-full"
+                     />
+                   </div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         </div>
+       )}
     </form>
   );
 } 
