@@ -118,10 +118,13 @@
   }
   html {
     font-family: "Raleway", sans-serif;
+    @apply bg-white dark:bg-gray-900;
   }
   body {
     @apply bg-background text-foreground;
     font-family: "Raleway", sans-serif;
+    @apply bg-white dark:bg-gray-900;
+    min-height: 100vh;
   }
 }
 

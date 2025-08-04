@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FlightForm } from '@/components/FlightForm';
 import { RecommendationResult } from '@/components/RecommendationResult';
 import { MapView } from '@/components/MapView';
+import { VisibleLandmarks } from '@/components/VisibleLandmarks';
 import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 import { Plane, MapPin } from 'lucide-react';
 
@@ -84,8 +85,8 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-white dark:bg-gray-900">
-      <div className="h-full flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen flex flex-col">
         {/* Header */}
         <div className="text-center pt-8 pb-6 relative">
           <div className="absolute top-8 right-6">
@@ -94,7 +95,7 @@ export default function Home() {
           <div className="flex items-center justify-center space-x-3 mb-2">
             <Plane className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Airplane Scenic View Finder
+              Scenic View Finder
             </h1>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -102,10 +103,10 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Main Content - Compact Bento Grid */}
+        {/* Main Content */}
         <div className="flex-1 px-6 pb-6">
-          <div className="h-full grid grid-cols-12 gap-4">
-            {/* Flight Form - Takes 5 columns */}
+          <div className="min-h-full grid grid-cols-12 gap-4">
+            {/* Flight Form - Takes 5 columns on desktop, full width on mobile */}
             <div className="col-span-12 lg:col-span-5">
               <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                 <div className="text-center mb-6">
@@ -118,13 +119,59 @@ export default function Home() {
                   </p>
                 </div>
                 
-                <FlightForm onSubmit={handleSubmit} isLoading={isLoading} visibleLandmarks={recommendation?.visibleLandmarks} />
+                <FlightForm onSubmit={handleSubmit} isLoading={isLoading} />
               </div>
             </div>
 
-            {/* Results Section - Takes 7 columns */}
+            {/* Results Section - Takes 7 columns on desktop, full width on mobile */}
             <div className="col-span-12 lg:col-span-7">
-              <div className="h-full grid grid-rows-2 gap-4">
+              {recommendation ? (
+                /* Mobile Layout: Stacked cards */
+                <div className="lg:hidden space-y-4">
+                  {/* 1. Recommended Seat - Top priority on mobile */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <RecommendationResult
+                      recommendation={recommendation.recommendation}
+                      reason={recommendation.reason}
+                      sunPosition={recommendation.sunPosition}
+                      flightDuration={recommendation.flightDuration}
+                      departureTime={recommendation.departureTime}
+                      arrivalTime={recommendation.arrivalTime}
+                      departureAirport={recommendation.departureAirport}
+                      arrivalAirport={recommendation.arrivalAirport}
+                    />
+                  </div>
+
+                  {/* 2. Flight Path - Second priority on mobile */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <MapView 
+                      flightPath={recommendation.flightPath} 
+                      departureAirport={recommendation.departureAirport}
+                      arrivalAirport={recommendation.arrivalAirport}
+                    />
+                  </div>
+
+                  {/* 3. Visible Landmarks - Additional feature on mobile */}
+                  <VisibleLandmarks landmarks={recommendation.visibleLandmarks} />
+                </div>
+              ) : (
+                /* Empty state for mobile */
+                <div className="lg:hidden space-y-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Plane className="h-8 w-8 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Enter flight details to get your seat recommendation
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Layout: Side by side */}
+              <div className="hidden lg:grid h-full grid-rows-2 gap-4">
                 {/* Recommendation Card - Top half */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                   {recommendation ? (
@@ -137,7 +184,6 @@ export default function Home() {
                       arrivalTime={recommendation.arrivalTime}
                       departureAirport={recommendation.departureAirport}
                       arrivalAirport={recommendation.arrivalAirport}
-                      visibleLandmarks={recommendation.visibleLandmarks}
                     />
                   ) : (
                     <div className="h-full flex items-center justify-center">

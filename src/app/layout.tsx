@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Airplane Scenic View Finder",
+  title: "Scenic View Finder",
   description: "Find the best seat for scenic views during your flight",
 };
 

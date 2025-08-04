@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,6 @@ import { CalendarIcon, Plane } from 'lucide-react';
 import { format } from 'date-fns';
 import { airports, Airport } from '@/lib/airports';
 import { cn } from '@/lib/utils';
-import { LandmarkImage } from './LandmarkImage';
 
 interface FlightFormProps {
   onSubmit: (data: {
@@ -20,14 +19,9 @@ interface FlightFormProps {
     flightDurationMinutes: number;
   }) => void;
   isLoading: boolean;
-  visibleLandmarks?: Array<{
-    name: string;
-    type: string;
-    side: 'Left' | 'Right';
-  }>;
 }
 
-export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightFormProps) {
+export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
   const [departureAirport, setDepartureAirport] = useState<Airport | null>(null);
   const [arrivalAirport, setArrivalAirport] = useState<Airport | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -38,13 +32,29 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
   const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
   const [showArrivalDropdown, setShowArrivalDropdown] = useState(false);
 
-  const filteredDepartureAirports = airports.filter(airport =>
+  // Filter out the selected arrival airport from departure options
+  const availableDepartureAirports = useMemo(() => {
+    if (!arrivalAirport) {
+      return airports;
+    }
+    return airports.filter(airport => airport.iata !== arrivalAirport.iata);
+  }, [arrivalAirport]);
+
+  // Filter out the selected departure airport from arrival options
+  const availableArrivalAirports = useMemo(() => {
+    if (!departureAirport) {
+      return airports;
+    }
+    return airports.filter(airport => airport.iata !== departureAirport.iata);
+  }, [departureAirport]);
+
+  const filteredDepartureAirports = availableDepartureAirports.filter(airport =>
     airport.name.toLowerCase().includes(departureSearch.toLowerCase()) ||
     airport.iata.toLowerCase().includes(departureSearch.toLowerCase()) ||
     airport.city.toLowerCase().includes(departureSearch.toLowerCase())
   );
 
-  const filteredArrivalAirports = airports.filter(airport =>
+  const filteredArrivalAirports = availableArrivalAirports.filter(airport =>
     airport.name.toLowerCase().includes(arrivalSearch.toLowerCase()) ||
     airport.iata.toLowerCase().includes(arrivalSearch.toLowerCase()) ||
     airport.city.toLowerCase().includes(arrivalSearch.toLowerCase())
@@ -244,43 +254,6 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
         <Plane className="mr-2 h-3 w-3" />
         {isLoading ? 'Finding...' : 'Find Best Seat'}
       </Button>
-
-             {/* Visible Landmarks Section */}
-       {visibleLandmarks && visibleLandmarks.length > 0 && (
-         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-             <h4 className="text-xs font-medium mb-3 text-blue-700 dark:text-blue-300">
-               🏛️ Visible Landmarks
-             </h4>
-             <div className="grid grid-cols-1 gap-3">
-               {visibleLandmarks.map((landmark, index) => (
-                 <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
-                   <div className="flex items-center justify-between mb-2">
-                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                       landmark.side === 'Left' 
-                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-                         : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                     }`}>
-                       {landmark.side} Side
-                     </span>
-                     <span className="text-gray-500 dark:text-gray-400 text-xs">{landmark.type}</span>
-                   </div>
-                   <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                     {landmark.name}
-                   </div>
-                   <div className="relative w-full h-24 rounded overflow-hidden">
-                     <LandmarkImage 
-                       landmarkName={landmark.name}
-                       landmarkType={landmark.type}
-                       className="w-full h-full"
-                     />
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-         </div>
-       )}
     </form>
   );
 } 

@@ -44,7 +44,7 @@ export function MapView({ flightPath, departureAirport, arrivalAirport }: MapVie
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Flight Path</h3>
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
             <span>Departure</span>
