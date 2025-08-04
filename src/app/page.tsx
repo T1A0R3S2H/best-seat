@@ -83,6 +83,8 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+  
+  const hasVisibleLandmarks = recommendation && recommendation.visibleLandmarks && recommendation.visibleLandmarks.length > 0;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -105,30 +107,36 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="flex-1 px-6 pb-6">
-          <div className="min-h-full grid grid-cols-12 gap-4">
-            {/* Flight Form - Takes 5 columns on desktop, full width on mobile */}
-            <div className="col-span-12 lg:col-span-5">
-              <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                <div className="text-center mb-6">
-                  <MapPin className="h-6 w-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    Flight Details
-                  </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Enter your departure and arrival information
-                  </p>
+          <div className="min-h-[80vh] grid grid-cols-12 gap-4">
+            
+            {/* Left Column: Flight Form & (Desktop-Only) Landmarks */}
+            <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
+              {/* Flight Details Card - always visible */}
+              <div className={hasVisibleLandmarks ? "" : "h-full"}>
+                <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <div className="text-center mb-6">
+                        <MapPin className="h-6 w-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Flight Details</h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Enter your departure and arrival information</p>
+                    </div>
+                    <FlightForm onSubmit={handleSubmit} isLoading={isLoading} />
                 </div>
-                
-                <FlightForm onSubmit={handleSubmit} isLoading={isLoading} />
               </div>
+
+              {/* Visible Landmarks Card (Desktop Only) */}
+              {hasVisibleLandmarks && (
+                <div className="hidden lg:flex flex-1 flex-col bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                  <VisibleLandmarks landmarks={recommendation.visibleLandmarks} />
+                </div>
+              )}
             </div>
 
-            {/* Results Section - Takes 7 columns on desktop, full width on mobile */}
-            <div className="col-span-12 lg:col-span-7">
+            {/* Right Column: Results */}
+            <div className="col-span-12 lg:col-span-7 flex flex-col">
               {recommendation ? (
                 /* Mobile Layout: Stacked cards */
                 <div className="lg:hidden space-y-4">
-                  {/* 1. Recommended Seat - Top priority on mobile */}
+                  {/* Recommended Seat */}
                   <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                     <RecommendationResult
                       recommendation={recommendation.recommendation}
@@ -141,8 +149,7 @@ export default function Home() {
                       arrivalAirport={recommendation.arrivalAirport}
                     />
                   </div>
-
-                  {/* 2. Flight Path - Second priority on mobile */}
+                  {/* Flight Path */}
                   <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                     <MapView 
                       flightPath={recommendation.flightPath} 
@@ -150,9 +157,12 @@ export default function Home() {
                       arrivalAirport={recommendation.arrivalAirport}
                     />
                   </div>
-
-                  {/* 3. Visible Landmarks - Additional feature on mobile */}
-                  <VisibleLandmarks landmarks={recommendation.visibleLandmarks} />
+                  {/* Visible Landmarks (Mobile Only) */}
+                  {hasVisibleLandmarks && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                      <VisibleLandmarks landmarks={recommendation.visibleLandmarks} />
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Empty state for mobile */
@@ -162,7 +172,7 @@ export default function Home() {
                       <div className="text-center">
                         <Plane className="h-8 w-8 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Enter flight details to get your seat recommendation
+                          Your recommendation will appear here
                         </p>
                       </div>
                     </div>
@@ -170,9 +180,9 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Desktop Layout: Side by side */}
-              <div className="hidden lg:grid h-full grid-rows-2 gap-4">
-                {/* Recommendation Card - Top half */}
+              {/* Desktop Layout: Flex Column */}
+              <div className="hidden lg:flex h-full flex-col gap-4">
+                {/* Recommendation Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                   {recommendation ? (
                     <RecommendationResult
@@ -197,8 +207,8 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Map Card - Bottom half */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                {/* Map Card - This will now grow to fill space */}
+                <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex flex-col">
                   {recommendation ? (
                     <MapView 
                       flightPath={recommendation.flightPath} 
@@ -223,7 +233,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Error Display - Fixed at bottom */}
+        {/* Error Display */}
         {error && (
           <div className="px-6 pb-4">
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
