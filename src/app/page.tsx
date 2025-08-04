@@ -24,10 +24,18 @@ interface RecommendationData {
   departureAirport?: {
     iata: string;
     city: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   arrivalAirport?: {
     iata: string;
     city: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   visibleLandmarks?: Array<{
     name: string;
@@ -45,6 +53,7 @@ export default function Home() {
     departureIata: string;
     arrivalIata: string;
     departureTimestamp: number;
+    flightDurationMinutes: number;
   }) => {
     setIsLoading(true);
     setError(null);
@@ -141,7 +150,11 @@ export default function Home() {
                 {/* Map Card - Bottom half */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                   {recommendation ? (
-                    <MapView flightPath={recommendation.flightPath} />
+                    <MapView 
+                      flightPath={recommendation.flightPath} 
+                      departureAirport={recommendation.departureAirport}
+                      arrivalAirport={recommendation.arrivalAirport}
+                    />
                   ) : (
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center">

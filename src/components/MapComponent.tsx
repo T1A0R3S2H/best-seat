@@ -5,6 +5,26 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getFlightSunPositions } from '@/lib/flightSunPositions';
 
+// Helper function to find the best longitude for a sun position marker
+function getBestLongitude(sunLng: number, flightCenterLng: number): number {
+  // Check three possibilities: original, +360°, and -360°
+  const possibilities = [sunLng, sunLng + 360, sunLng - 360];
+  
+  // Find the longitude closest to the flight center
+  let bestLng = sunLng;
+  let minDistance = Math.abs(sunLng - flightCenterLng);
+  
+  for (const lng of possibilities) {
+    const distance = Math.abs(lng - flightCenterLng);
+    if (distance < minDistance) {
+      minDistance = distance;
+      bestLng = lng;
+    }
+  }
+  
+  return bestLng;
+}
+
 interface FlightPathPoint {
   lat: number;
   lon: number;
@@ -13,9 +33,21 @@ interface FlightPathPoint {
 
 interface MapComponentProps {
   flightPath: FlightPathPoint[];
+  departureAirport?: {
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+  };
+  arrivalAirport?: {
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+  };
 }
 
-export default function MapComponent({ flightPath }: MapComponentProps) {
+export default function MapComponent({ flightPath, departureAirport, arrivalAirport }: MapComponentProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [sunPositions, setSunPositions] = useState<Array<{
@@ -164,9 +196,19 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
       className: 'sun-icon'
     });
 
+    // Calculate flight center longitude for longitude-wrapping logic
+    const flightCenterLng = departureAirport && arrivalAirport 
+      ? (departureAirport.coordinates.lon + arrivalAirport.coordinates.lon) / 2
+      : flightPath.length > 0 
+        ? (flightPath[0].lon + flightPath[flightPath.length - 1].lon) / 2
+        : 0;
+
     // Add sun markers for each position
     sunPositions.forEach((sunPos) => {
-      const sunMarker = L.marker([sunPos.lat, sunPos.lon], {
+      // Apply longitude-wrapping logic to ensure sun markers appear on the same map view
+      const bestLng = getBestLongitude(sunPos.lon, flightCenterLng);
+      
+      const sunMarker = L.marker([sunPos.lat, bestLng], {
         icon: sunIcon,
         title: `Sun Position at ${sunPos.label}`
       }).addTo(map);
@@ -213,7 +255,7 @@ export default function MapComponent({ flightPath }: MapComponentProps) {
         iconAnchor: [0, 0] 
     });
 
-      const labelMarker = L.marker([sunPos.lat - 2, sunPos.lon], {
+      const labelMarker = L.marker([sunPos.lat - 2, bestLng], {
         icon: labelIcon
       }).addTo(map);
 

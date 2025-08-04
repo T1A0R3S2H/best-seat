@@ -11,6 +11,18 @@ interface FlightPathPoint {
 
 interface MapViewProps {
   flightPath: FlightPathPoint[];
+  departureAirport?: {
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+  };
+  arrivalAirport?: {
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+  };
 }
 
 // Dynamically import the map component to avoid SSR issues
@@ -23,7 +35,7 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
   ),
 });
 
-export function MapView({ flightPath }: MapViewProps) {
+export function MapView({ flightPath, departureAirport, arrivalAirport }: MapViewProps) {
   if (!flightPath || flightPath.length === 0) {
     return null;
   }
@@ -48,7 +60,11 @@ export function MapView({ flightPath }: MapViewProps) {
         </div>
       </div>
       <div className="w-full h-96 rounded-lg overflow-hidden border">
-        <MapComponent flightPath={flightPath} />
+        <MapComponent 
+          flightPath={flightPath} 
+          departureAirport={departureAirport}
+          arrivalAirport={arrivalAirport}
+        />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ interface RequestBody {
   departureIata: string;
   arrivalIata: string;
   departureTimestamp: number;
+  flightDurationMinutes: number;
 }
 
 interface FlightPathPoint {
@@ -30,10 +31,18 @@ interface RecommendationResponse {
   departureAirport: {
     iata: string;
     city: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   arrivalAirport: {
     iata: string;
     city: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   visibleLandmarks: Array<{
     name: string;
@@ -141,17 +150,10 @@ function isLandmarkVisible(landmark: { type: string }, sunAltitude: number, time
   return false;
 }
 
-// Generate intermediate points along the great circle path
-function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: number, departureTime: number): { flightPath: FlightPathPoint[], duration: number } {
+// Generate intermediate points along the great circle path using provided duration
+function generateFlightPathWithDuration(lat1: number, lon1: number, lat2: number, lon2: number, departureTime: number, flightDurationMs: number): { flightPath: FlightPathPoint[] } {
   const points: FlightPathPoint[] = [];
   const numPoints = 8;
-  
-  // Calculate actual flight duration based on distance
-  const totalDistance = calculateDistance(lat1, lon1, lat2, lon2);
-  const averageSpeed = 800; // km/h for commercial aircraft
-  const flightDurationHours = totalDistance / averageSpeed;
-  const flightDurationMs = flightDurationHours * 60 * 60 * 1000;
-  const flightDuration = Math.round(flightDurationHours * 60); // Convert to minutes
   
   for (let i = 0; i <= numPoints; i++) {
     const fraction = i / numPoints;
@@ -169,9 +171,8 @@ function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: numb
     const lat = Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI;
     const lon = Math.atan2(y, x) * 180 / Math.PI;
     
-    // Estimate time at this point (assuming constant speed)
-    const distanceToPoint = calculateDistance(lat1, lon1, lat, lon);
-    const timeAtPoint = departureTime + (distanceToPoint / totalDistance) * flightDurationMs;
+    // Calculate time at this point using provided duration
+    const timeAtPoint = departureTime + (fraction * flightDurationMs);
     
     points.push({
       lat,
@@ -180,13 +181,13 @@ function generateFlightPath(lat1: number, lon1: number, lat2: number, lon2: numb
     });
   }
   
-  return { flightPath: points, duration: flightDuration };
+  return { flightPath: points };
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: RequestBody = await request.json();
-    const { departureIata, arrivalIata, departureTimestamp } = body;
+    const { departureIata, arrivalIata, departureTimestamp, flightDurationMinutes } = body;
 
     // Find airports
     const departureAirport = findAirportByIata(departureIata);
@@ -199,13 +200,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate flight path
-    const { flightPath, duration: flightDuration } = generateFlightPath(
+    // Generate flight path using provided duration
+    const flightDurationMs = flightDurationMinutes * 60 * 1000; // Convert minutes to milliseconds
+    const { flightPath } = generateFlightPathWithDuration(
       departureAirport.coordinates.lat,
       departureAirport.coordinates.lon,
       arrivalAirport.coordinates.lat,
       arrivalAirport.coordinates.lon,
-      departureTimestamp
+      departureTimestamp,
+      flightDurationMs
     );
 
     // Calculate midpoint for sun position analysis
@@ -327,9 +330,8 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Calculate flight times
+    // Calculate flight times using provided duration
     const departureTime = new Date(departureTimestamp);
-    const flightDurationMs = flightDuration * 60 * 1000; // Convert minutes to milliseconds
     const arrivalTime = new Date(departureTimestamp + flightDurationMs);
 
     const response: RecommendationResponse = {
@@ -340,7 +342,7 @@ export async function POST(request: NextRequest) {
         azimuth: sunAzimuth,
         altitude: sunAltitude
       },
-      flightDuration,
+      flightDuration: flightDurationMinutes,
       departureTime: departureTime.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',
@@ -353,11 +355,13 @@ export async function POST(request: NextRequest) {
       }),
       departureAirport: {
         iata: departureAirport.iata,
-        city: departureAirport.city
+        city: departureAirport.city,
+        coordinates: departureAirport.coordinates
       },
       arrivalAirport: {
         iata: arrivalAirport.iata,
-        city: arrivalAirport.city
+        city: arrivalAirport.city,
+        coordinates: arrivalAirport.coordinates
       },
       visibleLandmarks
     };

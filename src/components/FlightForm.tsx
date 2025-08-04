@@ -17,6 +17,7 @@ interface FlightFormProps {
     departureIata: string;
     arrivalIata: string;
     departureTimestamp: number;
+    flightDurationMinutes: number;
   }) => void;
   isLoading: boolean;
   visibleLandmarks?: Array<{
@@ -31,6 +32,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
   const [arrivalAirport, setArrivalAirport] = useState<Airport | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState('12:00');
+  const [duration, setDuration] = useState({ hours: 0, minutes: 0 });
   const [departureSearch, setDepartureSearch] = useState('');
   const [arrivalSearch, setArrivalSearch] = useState('');
   const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
@@ -55,14 +57,23 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
       return;
     }
 
+    // Validate that user has entered a flight duration
+    if (duration.hours === 0 && duration.minutes === 0) {
+      return;
+    }
+
     const [hours, minutes] = time.split(':').map(Number);
     const departureDate = new Date(date);
     departureDate.setHours(hours, minutes, 0, 0);
+
+    // Calculate total duration in minutes
+    const flightDurationMinutes = duration.hours * 60 + duration.minutes;
 
     onSubmit({
       departureIata: departureAirport.iata,
       arrivalIata: arrivalAirport.iata,
       departureTimestamp: departureDate.getTime(),
+      flightDurationMinutes,
     });
   };
 
@@ -190,12 +201,45 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
             />
           </div>
         </div>
+
+        {/* Flight Duration */}
+        <div className="space-y-1">
+          <Label className="text-xs font-medium text-gray-700">Flight Duration</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="hours" className="text-xs font-medium text-gray-600">Hours</Label>
+              <Input
+                id="hours"
+                type="number"
+                min="0"
+                max="24"
+                placeholder="H"
+                value={duration.hours || ''}
+                onChange={(e) => setDuration(prev => ({ ...prev, hours: parseInt(e.target.value) || 0 }))}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="minutes" className="text-xs font-medium text-gray-600">Minutes</Label>
+              <Input
+                id="minutes"
+                type="number"
+                min="0"
+                max="59"
+                placeholder="M"
+                value={duration.minutes || ''}
+                onChange={(e) => setDuration(prev => ({ ...prev, minutes: parseInt(e.target.value) || 0 }))}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <Button 
         type="submit" 
         className="w-full h-9 text-sm" 
-        disabled={!departureAirport || !arrivalAirport || !date || isLoading}
+        disabled={!departureAirport || !arrivalAirport || !date || (duration.hours === 0 && duration.minutes === 0) || isLoading}
       >
         <Plane className="mr-2 h-3 w-3" />
         {isLoading ? 'Finding...' : 'Find Best Seat'}
