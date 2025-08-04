@@ -82,7 +82,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
       <div className="space-y-3">
         {/* Departure Airport */}
         <div className="space-y-1">
-          <Label htmlFor="departure" className="text-xs font-medium text-gray-700">
+          <Label htmlFor="departure" className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Departure Airport
           </Label>
           <div className="relative">
@@ -98,20 +98,20 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
               className="h-9 text-sm"
             />
             {showDepartureDropdown && (
-              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white border-gray-200">
+              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {filteredDepartureAirports.map((airport) => (
                   <button
                     key={airport.iata}
                     type="button"
-                    className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 text-sm"
+                    className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                     onClick={() => {
                       setDepartureAirport(airport);
                       setDepartureSearch(`${airport.iata} - ${airport.city}`);
                       setShowDepartureDropdown(false);
                     }}
                   >
-                    <div className="font-medium">{airport.iata}</div>
-                    <div className="text-xs text-gray-600">
+                    <div className="font-medium text-gray-900 dark:text-white">{airport.iata}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       {airport.city}
                     </div>
                   </button>
@@ -123,7 +123,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
 
         {/* Arrival Airport */}
         <div className="space-y-1">
-          <Label htmlFor="arrival" className="text-xs font-medium text-gray-700">
+          <Label htmlFor="arrival" className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Arrival Airport
           </Label>
           <div className="relative">
@@ -139,20 +139,20 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
               className="h-9 text-sm"
             />
             {showArrivalDropdown && (
-              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white border-gray-200">
+              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {filteredArrivalAirports.map((airport) => (
                   <button
                     key={airport.iata}
                     type="button"
-                    className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 text-sm"
+                    className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                     onClick={() => {
                       setArrivalAirport(airport);
                       setArrivalSearch(`${airport.iata} - ${airport.city}`);
                       setShowArrivalDropdown(false);
                     }}
                   >
-                    <div className="font-medium">{airport.iata}</div>
-                    <div className="text-xs text-gray-600">
+                    <div className="font-medium text-gray-900 dark:text-white">{airport.iata}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       {airport.city}
                     </div>
                   </button>
@@ -165,7 +165,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
         {/* Date and Time */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-700">Date</Label>
+            <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -191,7 +191,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="time" className="text-xs font-medium text-gray-700">Time</Label>
+            <Label htmlFor="time" className="text-xs font-medium text-gray-700 dark:text-gray-300">Time</Label>
             <Input
               id="time"
               type="time"
@@ -204,10 +204,10 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
 
         {/* Flight Duration */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-700">Flight Duration</Label>
+          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Flight Duration</Label>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="hours" className="text-xs font-medium text-gray-600">Hours</Label>
+              <Label htmlFor="hours" className="text-xs font-medium text-gray-600 dark:text-gray-400">Hours</Label>
               <Input
                 id="hours"
                 type="number"
@@ -220,7 +220,7 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="minutes" className="text-xs font-medium text-gray-600">Minutes</Label>
+              <Label htmlFor="minutes" className="text-xs font-medium text-gray-600 dark:text-gray-400">Minutes</Label>
               <Input
                 id="minutes"
                 type="number"
@@ -247,25 +247,25 @@ export function FlightForm({ onSubmit, isLoading, visibleLandmarks }: FlightForm
 
              {/* Visible Landmarks Section */}
        {visibleLandmarks && visibleLandmarks.length > 0 && (
-         <div className="mt-6 pt-4 border-t border-gray-200">
-           <div className="bg-blue-50 rounded-lg p-3">
-             <h4 className="text-xs font-medium mb-3 text-blue-700">
+         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+             <h4 className="text-xs font-medium mb-3 text-blue-700 dark:text-blue-300">
                🏛️ Visible Landmarks
              </h4>
              <div className="grid grid-cols-1 gap-3">
                {visibleLandmarks.map((landmark, index) => (
-                 <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                 <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
                    <div className="flex items-center justify-between mb-2">
                      <span className={`px-2 py-1 rounded text-xs font-medium ${
                        landmark.side === 'Left' 
-                         ? 'bg-blue-100 text-blue-700' 
-                         : 'bg-green-100 text-green-700'
+                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                         : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                      }`}>
                        {landmark.side} Side
                      </span>
-                     <span className="text-gray-500 text-xs">{landmark.type}</span>
+                     <span className="text-gray-500 dark:text-gray-400 text-xs">{landmark.type}</span>
                    </div>
-                   <div className="text-sm font-medium text-gray-900 mb-2">
+                   <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                      {landmark.name}
                    </div>
                    <div className="relative w-full h-24 rounded overflow-hidden">
