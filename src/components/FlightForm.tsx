@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,26 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
   const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
   const [showArrivalDropdown, setShowArrivalDropdown] = useState(false);
 
+  // Initialize with pre-filled values if they exist
+  useEffect(() => {
+    // Check if we have pre-filled search values but no airport objects
+    if (departureSearch && !departureAirport) {
+      const airport = airports.find(a => `${a.iata} - ${a.city}` === departureSearch);
+      if (airport) {
+        console.log('Initializing departure airport from search:', airport);
+        setDepartureAirport(airport);
+      }
+    }
+    
+    if (arrivalSearch && !arrivalAirport) {
+      const airport = airports.find(a => `${a.iata} - ${a.city}` === arrivalSearch);
+      if (airport) {
+        console.log('Initializing arrival airport from search:', airport);
+        setArrivalAirport(airport);
+      }
+    }
+  }, [departureSearch, arrivalSearch, departureAirport, arrivalAirport]);
+
   // Filter out the selected arrival airport from departure options
   const availableDepartureAirports = useMemo(() => {
     if (!arrivalAirport) {
@@ -60,6 +80,15 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
     airport.city.toLowerCase().includes(arrivalSearch.toLowerCase())
   );
 
+  // Get today's date for disabling past dates
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Function to disable past dates
+  const disabledDays = (date: Date) => {
+    return date < today;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -87,6 +116,32 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
     });
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.airport-dropdown-container')) {
+        setShowDepartureDropdown(false);
+        setShowArrivalDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('Form state changed:', {
+      departureAirport,
+      arrivalAirport,
+      date,
+      duration,
+      departureSearch,
+      arrivalSearch
+    });
+  }, [departureAirport, arrivalAirport, date, duration, departureSearch, arrivalSearch]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full">
       <div className="space-y-3">
@@ -95,7 +150,7 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
           <Label htmlFor="departure" className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Departure Airport
           </Label>
-          <div className="relative">
+          <div className="relative airport-dropdown-container">
             <Input
               id="departure"
               placeholder="Search departure airport..."
@@ -103,18 +158,23 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
               onChange={(e) => {
                 setDepartureSearch(e.target.value);
                 setShowDepartureDropdown(true);
+                setShowArrivalDropdown(false);
               }}
-              onFocus={() => setShowDepartureDropdown(true)}
+              onFocus={() => {
+                setShowDepartureDropdown(true);
+                setShowArrivalDropdown(false);
+              }}
               className="h-9 text-sm"
             />
             {showDepartureDropdown && (
-              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {filteredDepartureAirports.map((airport) => (
                   <button
                     key={airport.iata}
                     type="button"
                     className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                     onClick={() => {
+                      console.log('Setting departure airport:', airport);
                       setDepartureAirport(airport);
                       setDepartureSearch(`${airport.iata} - ${airport.city}`);
                       setShowDepartureDropdown(false);
@@ -136,7 +196,7 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
           <Label htmlFor="arrival" className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Arrival Airport
           </Label>
-          <div className="relative">
+          <div className="relative airport-dropdown-container">
             <Input
               id="arrival"
               placeholder="Search arrival airport..."
@@ -144,18 +204,23 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
               onChange={(e) => {
                 setArrivalSearch(e.target.value);
                 setShowArrivalDropdown(true);
+                setShowDepartureDropdown(false);
               }}
-              onFocus={() => setShowArrivalDropdown(true)}
+              onFocus={() => {
+                setShowArrivalDropdown(true);
+                setShowDepartureDropdown(false);
+              }}
               className="h-9 text-sm"
             />
             {showArrivalDropdown && (
-              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {filteredArrivalAirports.map((airport) => (
                   <button
                     key={airport.iata}
                     type="button"
                     className="w-full px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                     onClick={() => {
+                      console.log('Setting arrival airport:', airport);
                       setArrivalAirport(airport);
                       setArrivalSearch(`${airport.iata} - ${airport.city}`);
                       setShowArrivalDropdown(false);
@@ -194,6 +259,7 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
                   mode="single"
                   selected={date}
                   onSelect={setDate}
+                  disabled={disabledDays}
                   initialFocus
                 />
               </PopoverContent>
@@ -246,10 +312,26 @@ export function FlightForm({ onSubmit, isLoading }: FlightFormProps) {
         </div>
       </div>
 
+      {/* Debug section - remove this after fixing the issue */}
+      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+        {/* <div>Debug: Departure: {departureAirport ? '✓' : '✗'} | Arrival: {arrivalAirport ? '✓' : '✗'} | Date: {date ? '✓' : '✗'} | Duration: {duration.hours > 0 || duration.minutes > 0 ? '✓' : '✗'}</div> */}
+        <div>Details: Departure: {departureAirport?.iata || 'none'} | Arrival: {arrivalAirport?.iata || 'none'} | Date: {date ? format(date, 'yyyy-MM-dd') : 'none'} | Duration: {duration.hours}h {duration.minutes}m</div>
+      </div>
+
       <Button 
         type="submit" 
         className="w-full h-9 text-sm" 
         disabled={!departureAirport || !arrivalAirport || !date || (duration.hours === 0 && duration.minutes === 0) || isLoading}
+        onClick={() => {
+          console.log('Form validation state:', {
+            departureAirport: !!departureAirport,
+            arrivalAirport: !!arrivalAirport,
+            date: !!date,
+            duration: duration,
+            durationValid: !(duration.hours === 0 && duration.minutes === 0),
+            isLoading
+          });
+        }}
       >
         <Plane className="mr-2 h-3 w-3" />
         {isLoading ? 'Finding...' : 'Find Best Seat'}
